@@ -1,6 +1,26 @@
 ﻿internal class Program
 {
-	class Question
+	interface IQuestion
+	{
+		string Text { get; set; }
+		List<Answer> Answers { get; set; }
+		public void addAnswer(Answer answer);
+	}
+
+	interface IAnswer
+	{
+		string Text { get; set; }
+		bool IsCorrect { get; set; }
+	}
+
+	interface IQuiz
+	{
+		string Title { get; set; }
+		List<Question> Questions { get; set; }
+		public void addQuestion(Question question);
+	}
+
+	class Question: IQuestion 
 	{
 		public string Text { get; set; }
 		public List<Answer> Answers { get; set; }
@@ -9,14 +29,14 @@
 			Text = text;
 			Answers = new List<Answer>();
 		}
-		public void addAnswers(Answer answer)
+		public void addAnswer(Answer answer)
 		{
 			Answers.Add(answer);
 		}
 
 	}
 
-	class Answer
+	class Answer : IAnswer
 	{
 		public string Text { get; set; }
 		public bool IsCorrect { get; set; }
@@ -27,7 +47,7 @@
 		}
 	}
 
-	class Quiz
+	class Quiz : IQuiz
 	{
 		public string Title { get; set; }
 		public List<Question> Questions { get; set; }

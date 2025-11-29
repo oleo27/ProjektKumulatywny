@@ -3,8 +3,6 @@
 	interface IQuestion
 	{
 		string Text { get; set; }
-		List<Answer> Answers { get; set; }
-		public void addAnswer(Answer answer);
 	}
 
 	interface IAnswer
@@ -16,22 +14,23 @@
 	interface IQuiz
 	{
 		string Title { get; set; }
-		List<Question> Questions { get; set; }
-		public void addQuestion(Question question);
 	}
 
-	class Question: IQuestion 
+	class Container<T>
+	{
+		public List<T> Items { get; set; } = new List<T>();
+		public void Add(T item)
+		{
+			Items.Add(item);
+		}
+	}
+
+	class Question: Container<Answer>, IQuestion
 	{
 		public string Text { get; set; }
-		public List<Answer> Answers { get; set; }
 		public Question(string text)
 		{
 			Text = text;
-			Answers = new List<Answer>();
-		}
-		public void addAnswer(Answer answer)
-		{
-			Answers.Add(answer);
 		}
 
 	}
@@ -47,22 +46,16 @@
 		}
 	}
 
-	class Quiz : IQuiz
+	class Quiz : Container<Question>, IQuiz
 	{
 		public string Title { get; set; }
-		public List<Question> Questions { get; set; }
 		public Quiz(string title)
 		{
 			Title = title;
 		}
-
-		public void addQuestion(Question question)
-		{
-			Questions.Add(question);
-		}
 	}
 	private static void Main(string[] args)
 	{
-		
+
 	}
 }

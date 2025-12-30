@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36327.8 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjektKumulatywny", "ProjektKumulatywny.csproj", "{CB17F316-217F-46A0-9316-68535C624F29}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjektKumulatywny", "ConsoleApp\ProjektKumulatywny.csproj", "{CB17F316-217F-46A0-9316-68535C624F29}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

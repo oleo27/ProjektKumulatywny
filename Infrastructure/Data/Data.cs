@@ -1,12 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Reflection.Emit;
 using Microsoft.EntityFrameworkCore;
-using static Infrastructure.Models;
+using static Infrastructure.Models.Models;
 
-namespace Infrastructure
+namespace Infrastructure.Data
 {
-	public class Data
-	{
 		public class QuizContext : DbContext
 		{
 			public DbSet<Quiz> Quizzes { get; set; }
@@ -39,5 +37,4 @@ namespace Infrastructure
 				}
 			}
 		}
-	}
 }

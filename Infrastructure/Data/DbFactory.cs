@@ -5,9 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using static Infrastructure.Data;
 
-namespace Infrastructure
+namespace Infrastructure.Data
 {
 	public class QuizContextFactory : IDesignTimeDbContextFactory<QuizContext>
 	{

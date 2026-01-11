@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Infrastructure.Interfaces;
-using static Infrastructure.Models;
+using static Infrastructure.Models.Interfaces;
+using static Infrastructure.Models.Models;
 
-namespace Infrastructure
+namespace Infrastructure.Models
 {
 	public class Models
 	{
@@ -15,7 +15,7 @@ namespace Infrastructure
 			public int Id { get; set; }
 			public required string Text { get; set; }
 			public int QuizId { get; set; }
-			public required Quiz Quiz { get; set; }
+			public Quiz Quiz { get; set; }
 
 		}
 
@@ -26,7 +26,7 @@ namespace Infrastructure
 			public bool IsCorrect { get; set; }
 
 			public int QuestionId { get; set; }
-			public required Question Question { get; set; }
+			public Question Question { get; set; }
 		}
 
 		public class Quiz : Container<Question>, IQuiz

@@ -1,17 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Infrastructure.Data;
 
 namespace WPF
 {
-	/// <summary>
-	/// Logika interakcji dla klasy App.xaml
-	/// </summary>
 	public partial class App : Application
 	{
+		public static IHost AppHost { get; private set; }
+
+		public App()
+		{
+			AppHost = Host.CreateDefaultBuilder()
+				.ConfigureServices((context, services) =>
+				{
+					services.AddDbContext<QuizContext>(options =>
+						options.UseSqlServer(
+							"Server=(localdb)\\MSSQLLocalDB;Database=QuizDb;Trusted_Connection=True;"
+						));
+
+					services.AddTransient<MainWindow>();
+				})
+				.Build();
+		}
+
+		protected override void OnStartup(StartupEventArgs e)
+		{
+			AppHost.Start();
+			var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
+			mainWindow.Show();
+			base.OnStartup(e);
+		}
 	}
 }

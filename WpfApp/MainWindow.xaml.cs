@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static Infrastructure.Models.Models;
@@ -11,6 +12,7 @@ namespace WpfApp
 	{
 		private readonly QuizContext _db;
 
+		private readonly ObservableCollection<Quiz> _allQuizzes = new();
 		private readonly ObservableCollection<Quiz> _quizzes = new();
 		private readonly ObservableCollection<Question> _questions = new();
 		private readonly ObservableCollection<Answer> _answers = new();
@@ -36,13 +38,16 @@ namespace WpfApp
 			LoadQuizzes();
 		}
 
-		// ===================== LOAD =====================
-
 		private void LoadQuizzes()
 		{
+			_allQuizzes.Clear();
 			_quizzes.Clear();
+
 			foreach (var quiz in _db.Quizzes.AsNoTracking().ToList())
+			{
+				_allQuizzes.Add(quiz);
 				_quizzes.Add(quiz);
+			}
 
 			_questions.Clear();
 			_answers.Clear();
@@ -74,7 +79,23 @@ namespace WpfApp
 			}
 		}
 
-		// ===================== QUIZ CRUD =====================
+		private void ApplyQuizFilter(string text)
+		{
+			text = text.ToLower();
+
+			_quizzes.Clear();
+
+			foreach (var quiz in _allQuizzes
+				.Where(q => q.Title.ToLower().Contains(text)))
+			{
+				_quizzes.Add(quiz);
+			}
+		}
+
+		private void QuizFilterTextBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			ApplyQuizFilter(((TextBox)sender).Text);
+		}
 
 		private void AddQuiz_Click(object sender, RoutedEventArgs e)
 		{
@@ -113,13 +134,11 @@ namespace WpfApp
 			LoadQuizzes();
 		}
 
-		private void QuizListBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+		private void QuizListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			if (QuizListBox.SelectedItem is Quiz quiz)
 				LoadQuestions(quiz.Id);
 		}
-
-		// ===================== QUESTION CRUD =====================
 
 		private void AddQuestion_Click(object sender, RoutedEventArgs e)
 		{
@@ -163,13 +182,11 @@ namespace WpfApp
 			LoadQuestions(q.QuizId);
 		}
 
-		private void QuestionListBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+		private void QuestionListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			if (QuestionListBox.SelectedItem is Question q)
 				LoadAnswers(q.Id);
 		}
-
-		// ===================== ANSWER CRUD =====================
 
 		private void AddAnswer_Click(object sender, RoutedEventArgs e)
 		{

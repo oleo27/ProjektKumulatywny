@@ -14,7 +14,6 @@ namespace Infrastructure.Data
 		{
 			var optionsBuilder = new DbContextOptionsBuilder<QuizContext>();
 
-			// Podaj swój connection string tutaj
 			optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=QuizDb;Trusted_Connection=True;");
 
 			return new QuizContext(optionsBuilder.Options);

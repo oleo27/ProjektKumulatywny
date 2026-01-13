@@ -1,0 +1,39 @@
+﻿@page
+@model SolveModel
+
+<h1>@Model.Quiz.Title</h1>
+
+@if (Model.Finished)
+{
+    <h2>Twój wynik: @Model.Score / @Model.Quiz.Items.Count</h2>
+}
+else
+{
+    <form method="post">
+        @for (int i = 0; i < Model.Quiz.Items.Count; i++)
+        {
+            var q = Model.Quiz.Items[i];
+
+            <fieldset>
+                <legend>@q.Text</legend>
+
+                <input type="hidden"
+                       name="Answers[@i].QuestionId"
+                       value="@q.Id" />
+
+                @foreach (var a in q.Items)
+                {
+                    <div>
+                        <input type="radio"
+                               name="Answers[@i].SelectedAnswerId"
+                               value="@a.Id" />
+                        <label>@a.Text</label>
+                    </div>
+                }
+            </fieldset>
+        }
+
+        <button type="submit">Zakończ quiz</button>
+    </form>
+}
+

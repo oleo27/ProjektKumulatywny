@@ -3,14 +3,18 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Infrastructure.Data;
+using Infrastructure.Interfaces;
+using Infrastructure.Models;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
-using static Infrastructure.Models.Models;
 
 namespace WpfApp
 {
 	public partial class MainWindow : Window
 	{
-		private readonly QuizContext _db;
+		private readonly IQuizService<Quiz> _quizService;
+		private readonly IQuizService<Question> _questionService;
+		private readonly IQuizService<Answer> _answerService;
 
 		private readonly ObservableCollection<Quiz> _allQuizzes = new();
 		private readonly ObservableCollection<Quiz> _quizzes = new();
@@ -25,7 +29,11 @@ namespace WpfApp
 				.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=QuizDb;Trusted_Connection=True;")
 				.Options;
 
-			_db = new QuizContext(options);
+			var context = new QuizContext(options);
+
+			_quizService = new QuizService<Quiz>(context);
+			_questionService = new QuizService<Question>(context);
+			_answerService = new QuizService<Answer>(context);
 
 			QuizListBox.ItemsSource = _quizzes;
 			QuestionListBox.ItemsSource = _questions;
@@ -35,203 +43,154 @@ namespace WpfApp
 			QuestionListBox.DisplayMemberPath = "Text";
 			AnswerListBox.DisplayMemberPath = "Text";
 
-			LoadQuizzes();
+			Loaded += async (_, _) => await LoadQuizzesAsync();
 		}
 
-		private void LoadQuizzes()
+		private async Task LoadQuizzesAsync()
 		{
 			_allQuizzes.Clear();
 			_quizzes.Clear();
 
-			foreach (var quiz in _db.Quizzes.AsNoTracking().ToList())
+			var quizzes = await _quizService.GetAllAsync();
+			foreach (var q in quizzes)
 			{
-				_allQuizzes.Add(quiz);
-				_quizzes.Add(quiz);
+				_allQuizzes.Add(q);
+				_quizzes.Add(q);
 			}
 
 			_questions.Clear();
 			_answers.Clear();
 		}
 
-		private void LoadQuestions(int quizId)
+		private async Task LoadQuestionsAsync(int quizId)
 		{
 			_questions.Clear();
-			foreach (var q in _db.Questions
-				.Where(x => x.QuizId == quizId)
-				.AsNoTracking()
-				.ToList())
-			{
+			var questions = await _questionService.GetAllAsync();
+			foreach (var q in questions.Where(x => x.QuizId == quizId))
 				_questions.Add(q);
-			}
 
 			_answers.Clear();
 		}
 
-		private void LoadAnswers(int questionId)
+		private async Task LoadAnswersAsync(int questionId)
 		{
 			_answers.Clear();
-			foreach (var a in _db.Answers
-				.Where(x => x.QuestionId == questionId)
-				.AsNoTracking()
-				.ToList())
-			{
+			var answers = await _answerService.GetAllAsync();
+			foreach (var a in answers.Where(x => x.QuestionId == questionId))
 				_answers.Add(a);
-			}
-		}
-
-		private void ApplyQuizFilter(string text)
-		{
-			text = text.ToLower();
-
-			_quizzes.Clear();
-
-			foreach (var quiz in _allQuizzes
-				.Where(q => q.Title.ToLower().Contains(text)))
-			{
-				_quizzes.Add(quiz);
-			}
 		}
 
 		private void QuizFilterTextBox_TextChanged(object sender, TextChangedEventArgs e)
 		{
-			ApplyQuizFilter(((TextBox)sender).Text);
+			var text = QuizFilterTextBox.Text.ToLower();
+			_quizzes.Clear();
+			foreach (var quiz in _allQuizzes.Where(q => q.Title.ToLower().Contains(text)))
+				_quizzes.Add(quiz);
 		}
 
-		private void AddQuiz_Click(object sender, RoutedEventArgs e)
+		private async void AddQuiz_Click(object sender, RoutedEventArgs e)
 		{
 			if (string.IsNullOrWhiteSpace(QuizTitleTextBox.Text)) return;
 
-			_db.Quizzes.Add(new Quiz { Title = QuizTitleTextBox.Text });
-			_db.SaveChanges();
+			await _quizService.AddAsync(new Quiz { Title = QuizTitleTextBox.Text });
+			await LoadQuizzesAsync();
 
-			LoadQuizzes();
 			QuizTitleTextBox.Clear();
 		}
 
-		private void EditQuiz_Click(object sender, RoutedEventArgs e)
+		private async void EditQuiz_Click(object sender, RoutedEventArgs e)
 		{
 			if (QuizListBox.SelectedItem is not Quiz selected) return;
 
-			var quiz = _db.Quizzes.Find(selected.Id);
-			if (quiz == null) return;
-
-			quiz.Title = QuizTitleTextBox.Text;
-			_db.SaveChanges();
-
-			LoadQuizzes();
+			selected.Title = QuizTitleTextBox.Text;
+			await _quizService.UpdateAsync(selected);
+			await LoadQuizzesAsync();
 		}
 
-		private void DeleteQuiz_Click(object sender, RoutedEventArgs e)
+		private async void DeleteQuiz_Click(object sender, RoutedEventArgs e)
 		{
 			if (QuizListBox.SelectedItem is not Quiz selected) return;
 
-			var quiz = _db.Quizzes.Find(selected.Id);
-			if (quiz == null) return;
-
-			_db.Quizzes.Remove(quiz);
-			_db.SaveChanges();
-
-			LoadQuizzes();
+			await _quizService.DeleteAsync(selected);
+			await LoadQuizzesAsync();
 		}
 
-		private void QuizListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		private async void QuizListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			if (QuizListBox.SelectedItem is Quiz quiz)
-				LoadQuestions(quiz.Id);
+				await LoadQuestionsAsync(quiz.Id);
 		}
 
-		private void AddQuestion_Click(object sender, RoutedEventArgs e)
+		private async void QuestionListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			if (QuizListBox.SelectedItem is not Quiz quiz ||
-				string.IsNullOrWhiteSpace(QuestionTextBox.Text)) return;
+			if (QuestionListBox.SelectedItem is Question question)
+				await LoadAnswersAsync(question.Id);
+		}
 
-			_db.Questions.Add(new Question
+		private async void AddQuestion_Click(object sender, RoutedEventArgs e)
+		{
+			if (QuizListBox.SelectedItem is not Quiz quiz || string.IsNullOrWhiteSpace(QuestionTextBox.Text)) return;
+
+			await _questionService.AddAsync(new Question
 			{
 				Text = QuestionTextBox.Text,
 				QuizId = quiz.Id
 			});
 
-			_db.SaveChanges();
-			LoadQuestions(quiz.Id);
+			await LoadQuestionsAsync(quiz.Id);
 			QuestionTextBox.Clear();
 		}
 
-		private void EditQuestion_Click(object sender, RoutedEventArgs e)
+		private async void EditQuestion_Click(object sender, RoutedEventArgs e)
 		{
-			if (QuestionListBox.SelectedItem is not Question selected) return;
-
-			var q = _db.Questions.Find(selected.Id);
-			if (q == null) return;
+			if (QuestionListBox.SelectedItem is not Question q) return;
 
 			q.Text = QuestionTextBox.Text;
-			_db.SaveChanges();
-
-			LoadQuestions(q.QuizId);
+			await _questionService.UpdateAsync(q);
+			await LoadQuestionsAsync(q.QuizId);
 		}
 
-		private void DeleteQuestion_Click(object sender, RoutedEventArgs e)
+		private async void DeleteQuestion_Click(object sender, RoutedEventArgs e)
 		{
-			if (QuestionListBox.SelectedItem is not Question selected) return;
+			if (QuestionListBox.SelectedItem is not Question q) return;
 
-			var q = _db.Questions.Find(selected.Id);
-			if (q == null) return;
-
-			_db.Questions.Remove(q);
-			_db.SaveChanges();
-
-			LoadQuestions(q.QuizId);
+			await _questionService.DeleteAsync(q);
+			await LoadQuestionsAsync(q.QuizId);
 		}
 
-		private void QuestionListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		private async void AddAnswer_Click(object sender, RoutedEventArgs e)
 		{
-			if (QuestionListBox.SelectedItem is Question q)
-				LoadAnswers(q.Id);
-		}
+			if (QuestionListBox.SelectedItem is not Question q || string.IsNullOrWhiteSpace(AnswerTextBox.Text)) return;
 
-		private void AddAnswer_Click(object sender, RoutedEventArgs e)
-		{
-			if (QuestionListBox.SelectedItem is not Question q ||
-				string.IsNullOrWhiteSpace(AnswerTextBox.Text)) return;
-
-			_db.Answers.Add(new Answer
+			await _answerService.AddAsync(new Answer
 			{
 				Text = AnswerTextBox.Text,
 				IsCorrect = IsCorrectCheckBox.IsChecked ?? false,
 				QuestionId = q.Id
 			});
 
-			_db.SaveChanges();
-			LoadAnswers(q.Id);
-
+			await LoadAnswersAsync(q.Id);
 			AnswerTextBox.Clear();
 			IsCorrectCheckBox.IsChecked = false;
 		}
 
-		private void EditAnswer_Click(object sender, RoutedEventArgs e)
+		private async void EditAnswer_Click(object sender, RoutedEventArgs e)
 		{
-			if (AnswerListBox.SelectedItem is not Answer selected) return;
-
-			var a = _db.Answers.Find(selected.Id);
-			if (a == null) return;
+			if (AnswerListBox.SelectedItem is not Answer a) return;
 
 			a.Text = AnswerTextBox.Text;
 			a.IsCorrect = IsCorrectCheckBox.IsChecked ?? false;
 
-			_db.SaveChanges();
-			LoadAnswers(a.QuestionId);
+			await _answerService.UpdateAsync(a);
+			await LoadAnswersAsync(a.QuestionId);
 		}
 
-		private void DeleteAnswer_Click(object sender, RoutedEventArgs e)
+		private async void DeleteAnswer_Click(object sender, RoutedEventArgs e)
 		{
-			if (AnswerListBox.SelectedItem is not Answer selected) return;
+			if (AnswerListBox.SelectedItem is not Answer a) return;
 
-			var a = _db.Answers.Find(selected.Id);
-			if (a == null) return;
-
-			_db.Answers.Remove(a);
-			_db.SaveChanges();
-
-			LoadAnswers(a.QuestionId);
+			await _answerService.DeleteAsync(a);
+			await LoadAnswersAsync(a.QuestionId);
 		}
 	}
 }

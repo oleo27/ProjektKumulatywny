@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection.Emit;
 using Microsoft.EntityFrameworkCore;
-using static Infrastructure.Models.Models;
+using Infrastructure.Models;
 
 namespace Infrastructure.Data
 {

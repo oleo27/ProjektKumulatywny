@@ -2,7 +2,7 @@ using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using static Infrastructure.Models.Models;
+using Infrastructure.Models;
 
 namespace Web.Pages
 {

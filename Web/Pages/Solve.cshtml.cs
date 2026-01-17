@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Web.Models;
-using static Infrastructure.Models.Models;
+using Infrastructure.Models;
 
 public class SolveModel : PageModel
 {
